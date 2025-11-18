@@ -1,0 +1,27 @@
+/* Container for app */
+.app-container {
+  padding: 20px;
+}
+
+/* Heading style */
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Search input */
+.search-box input {
+  background-color: white;
+}
+
+/* Create button color override */
+.create-btn {
+  background-color: #ffc60b !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+}
+
+.create-btn:hover {
+  background-color: #ffc60b !important;
+}
