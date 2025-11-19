@@ -1,156 +1,263 @@
 import React from 'react';
-import { Box, Typography, Select, MenuItem, InputLabel, FormControl, IconButton, Divider, Button, Snackbar, Alert, Paper } from "@mui/material";
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import SaveIcon from '@mui/icons-material/Save';
+import {
+    Box,
+    Typography,
+    Button,
+    IconButton,
+    Snackbar,
+    Alert,
+    Dialog,
+    Tooltip,
+    Menu,
+    MenuItem
+} from "@mui/material";
+
 import Editor from '@monaco-editor/react';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import FileIcon from '@mui/icons-material/FilePresent';
+import FolderIcon from '@mui/icons-material/FolderOpen';
 import type { ScriptItem } from "../data/scripts";
 import EditScriptForm from "../components/EditScriptForm";
-import Dialog from '@mui/material/Dialog';
 
 interface ScriptDetailsProps {
     script: ScriptItem;
-    onBack: () => void;
     onUpdate?: (updated: ScriptItem) => void;
 }
 
-interface ScriptDetailsProps {
-    script: ScriptItem;
-    onBack: () => void;
-}
+const ScriptDetails: React.FC<ScriptDetailsProps> = ({ script, onUpdate }) => {
+const initialEditor = `# Python script for ${script.scriptName}
+# Procedure: ${script.procedureName}
+# You can access Example scripts from the Templates menu (folder icon) or open a local .py file using the file icon.
+`;
 
-const ScriptDetails: React.FC<ScriptDetailsProps> = ({ script, onBack, onUpdate }) => {
-    const [action, setAction] = React.useState<string>("option1");
-    const initialEditor = `-- ${script.scriptName}\n-- Procedure: ${script.procedureName}\n\nSELECT * FROM your_table;`;
     const [editorContent, setEditorContent] = React.useState<string>(initialEditor);
-    const [snack, setSnack] = React.useState<{ open: boolean; message: string; severity?: 'success' | 'info' | 'error' }>({ open: false, message: '', severity: 'info' });
-    const [runOutput, setRunOutput] = React.useState<string | null>(null);
+    const [snack, setSnack] = React.useState({
+        open: false,
+        message: '',
+        severity: "info" as 'success' | 'info' | 'error'
+    });
 
-    const handleRun = () => {
-        // placeholder run action
-        console.log('Running script:\n', editorContent);
-        // Simulate output — replace with real execution result from API
-        const simulated = `-- Execution result for ${script.scriptName}\nRows returned: 3\n\nid | name | status\n1  | Alice | OK\n2  | Bob   | OK\n3  | Carol | OK`;
-        setRunOutput(simulated);
-        setSnack({ open: true, message: 'Script executed', severity: 'success' });
-    };
-
-    const handleUpdate = () => {
-        // placeholder update action (e.g., save)
-        console.log('Updating script with content:\n', editorContent);
-        setSnack({ open: true, message: 'Script updated', severity: 'success' });
-    };
-
-    // Edit dialog state
     const [openEdit, setOpenEdit] = React.useState(false);
+
+    // TEMPLATE 
+    const [templateAnchor, setTemplateAnchor] = React.useState<null | HTMLElement>(null);
+    const loadTemplate = async (fileName: string) => {
+        try {
+            const response = await fetch(`/templates/${fileName}`);
+            const text = await response.text();
+            setEditorContent(text);
+        } catch (err) {
+            console.error("Error loading template", err);
+        }
+    };
+
+    // FILE OPEN HANDLER
+    const handleFileOpen = () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".py";
+
+        input.onchange = async (e: any) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const text = await file.text();
+            setEditorContent(text);
+        };
+
+        input.click();
+    };
+    const openTemplateMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+        setTemplateAnchor(e.currentTarget);
+    };
+
+    const closeTemplateMenu = () => {
+        setTemplateAnchor(null);
+    };
+
+    // SAVE HANDLER
+    const handleUpdate = () => {
+        setSnack({
+            open: true,
+            message: 'Script updated successfully.',
+            severity: 'success'
+        });
+    };
 
     const handleOpenEdit = () => setOpenEdit(true);
     const handleCloseEdit = () => setOpenEdit(false);
 
     const handleSaveEdit = (data: { scriptName: string; procedureName: string }) => {
-        // update displayed script
-        const updated: ScriptItem = { ...script, scriptName: data.scriptName, procedureName: data.procedureName };
+        const updated: ScriptItem = {
+            ...script,
+            scriptName: data.scriptName,
+            procedureName: data.procedureName
+        };
+
         if (onUpdate) onUpdate(updated);
-        setSnack({ open: true, message: 'Script details updated', severity: 'success' });
+
+        setSnack({
+            open: true,
+            message: 'Script details updated',
+            severity: 'success'
+        });
+
         setOpenEdit(false);
     };
 
-    const handleCloseSnack = () => setSnack((s) => ({ ...s, open: false }));
+    const handleCloseSnack = () => setSnack(s => ({ ...s, open: false }));
+
 
     return (
         <Box p={3} width="100%">
-            <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-                <Box display="flex" alignItems="center" gap={2}>
-                    <IconButton onClick={onBack} aria-label="back">
-                        <ArrowBackIcon />
-                    </IconButton>
 
-                    <Box>
-                        <Typography variant="h5" fontWeight={700}>
-                            {script.scriptName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {script.procedureName}
-                        </Typography>
-                    </Box>
-                </Box>
+            {/* HEADER PANEL */}
+            <Box
+                mb={3}
+                sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    backgroundColor: "#fff",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+                }}
+            >
 
-                <Box display="flex" alignItems="center" gap={2}>
-                    <Typography color="text.secondary" sx={{ mr: 1 }}>ID: {script.id}</Typography>
-                    <Button variant="outlined" startIcon={<EditIcon />} sx={{ textTransform: 'none' }} onClick={handleOpenEdit}>Edit</Button>
-                </Box>
-            </Box>
-
-            <Divider sx={{ mb: 2 }} />
-
-            <Box display="flex" flexWrap="wrap" gap={3} mb={2}>
-                <Box sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }}>
-                    <Typography variant="caption" color="text.secondary">Script Name</Typography>
-                    <Typography variant="body1" fontWeight={600}>{script.scriptName}</Typography>
-                </Box>
-
-                <Box sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }}>
+                {/* Labels */}
+                <Box
+                    display="grid"
+                    gridTemplateColumns="1fr 2fr 2fr 1fr 1fr 1fr"
+                    alignItems="center"
+                    mb={0.5}
+                >
+                    <Typography variant="caption" color="text.secondary">Script ID</Typography>
+                    <Typography variant="caption" color="text.secondary">Script</Typography>
                     <Typography variant="caption" color="text.secondary">Procedure Name</Typography>
-                    <Typography variant="body1" fontWeight={600}>{script.procedureName}</Typography>
-                </Box>
-
-                <Box sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }}>
                     <Typography variant="caption" color="text.secondary">Created By</Typography>
+                </Box>
+
+                {/* Values */}
+                <Box
+                    display="grid"
+                    gridTemplateColumns="1fr 2fr 2fr 1fr 1fr 1fr"
+                    alignItems="center"
+                    gap={1}
+                >
+                    <Typography variant="body1" fontWeight={600}>{script.id}</Typography>
+                    <Typography variant="body1" fontWeight={600}>{script.scriptName}</Typography>
+                    <Typography variant="body1" fontWeight={600}>{script.procedureName}</Typography>
                     <Typography variant="body1">{script.createdBy}</Typography>
-                </Box>
-            </Box>
 
-            <Box mt={1}>
-                <FormControl fullWidth sx={{ maxWidth: 480 }}>
-                    <InputLabel id="action-label">Choose Action</InputLabel>
-                    <Select
-                        labelId="action-label"
-                        value={action}
-                        label="Choose Action"
-                        onChange={(e) => setAction(e.target.value as string)}
+                    <Button
+                        startIcon={<EditIcon />}
+                        onClick={handleOpenEdit}
+                        sx={{
+                            textTransform: "none",
+                            color: "black",
+                            "&:hover": { background: "#f0f0f0" }
+                        }}
                     >
-                        <MenuItem value="option1">Run Script</MenuItem>
-                        <MenuItem value="option2">Schedule</MenuItem>
-                        <MenuItem value="option3">Export</MenuItem>
-                    </Select>
-                </FormControl>
+                        Edit
+                    </Button>
+
+                    <Button
+                        sx={{
+                            textTransform: "none",
+                            backgroundColor: "#FFC60B",
+                            color: "black",
+                            "&:hover": { backgroundColor: "#e6b307" }
+                        }}
+                        onClick={handleUpdate}
+                    >
+                        Save
+                    </Button>
+
+                </Box>
             </Box>
 
-            <Box mt={3}>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                    <Typography variant="subtitle2" color="text.secondary">Script Editor</Typography>
 
-                    <Box display="flex" gap={1}>
-                        <IconButton color="primary" onClick={handleRun} aria-label="run script">
-                            <PlayArrowIcon />
+            {/* SCRIPT EDITOR */}
+            <Box mt={3}>
+                <Typography variant="h6" fontWeight={700} mb={1}>
+                    Script Editor
+                </Typography>
+
+                {/* Toolbar */}
+                <Box display="flex" alignItems="center" gap={1.5} pb={1} pl={0.5}>
+
+                    {/* Templates */}
+                    <Tooltip title="Examples">
+                        <IconButton size="small" onClick={openTemplateMenu}>
+                            <FolderIcon sx={{ fontSize: 22 }} />
                         </IconButton>
-                        <IconButton color="primary" onClick={handleUpdate} aria-label="update script">
-                            <SaveIcon />
+                    </Tooltip>
+
+                    {/* Open File */}
+                    <Tooltip title="Open Python File">
+                        <IconButton size="small" onClick={handleFileOpen}>
+                            <FileIcon sx={{ fontSize: 22 }} />
                         </IconButton>
-                    </Box>
+                    </Tooltip>
+
                 </Box>
 
-                <Editor
-                    height="60vh"
-                    defaultLanguage="sql"
-                    value={editorContent}
-                    onChange={(value) => setEditorContent(value ?? '')}
-                    options={{ minimap: { enabled: false }, fontSize: 13 }}
-                />
+                {/* TEMPLATE POPUP MENU */}
+                <Menu
+                    anchorEl={templateAnchor}
+                    open={Boolean(templateAnchor)}
+                    onClose={closeTemplateMenu}
+                >
+                    <MenuItem onClick={() => { loadTemplate("average.py"); closeTemplateMenu(); }}>
+                        Average
+                    </MenuItem>
 
-                <Snackbar open={snack.open} autoHideDuration={2500} onClose={handleCloseSnack} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
-                    <Alert onClose={handleCloseSnack} severity={snack.severity} sx={{ width: '100%' }}>
+                    <MenuItem onClick={() => { loadTemplate("minimum.py"); closeTemplateMenu(); }}>
+                        Minimum
+                    </MenuItem>
+
+                    <MenuItem onClick={() => { loadTemplate("maximum.py"); closeTemplateMenu(); }}>
+                        Maximum
+                    </MenuItem>
+                </Menu>
+
+                {/* Editor */}
+                <Box
+                    sx={{
+                        border: "1px solid #d1d1d1",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
+                    }}
+                >
+                    <Editor
+                        height="65vh"
+                        defaultLanguage="python"
+                        value={editorContent}
+                        onChange={val => setEditorContent(val ?? "")}
+                        options={{
+                            minimap: { enabled: false },
+                            fontSize: 14,
+                            padding: { top: 12 }
+                        }}
+                    />
+                </Box>
+
+
+                {/* Snackbar */}
+                <Snackbar
+                    open={snack.open}
+                    autoHideDuration={2500}
+                    onClose={handleCloseSnack}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                >
+                    <Alert severity={snack.severity} sx={{ width: "100%" }}>
                         {snack.message}
                     </Alert>
                 </Snackbar>
-                {/* Output panel shown after running the script */}
-                {runOutput && (
-                    <Paper sx={{ mt: 2, p: 2, backgroundColor: '#0f172a', color: '#e6eef8', fontFamily: 'monospace', whiteSpace: 'pre-wrap', maxHeight: 260, overflow: 'auto' }} elevation={1}>
-                        <Typography component="pre" sx={{ m: 0, fontFamily: 'inherit', fontSize: 13 }}>{runOutput}</Typography>
-                    </Paper>
-                )}
+
             </Box>
+
+
+            {/* EDIT MODAL */}
             <Dialog open={openEdit} onClose={handleCloseEdit} fullWidth maxWidth="sm">
                 <EditScriptForm
                     initialScriptName={script.scriptName}
@@ -159,6 +266,7 @@ const ScriptDetails: React.FC<ScriptDetailsProps> = ({ script, onBack, onUpdate 
                     onCancel={handleCloseEdit}
                 />
             </Dialog>
+
         </Box>
     );
 };

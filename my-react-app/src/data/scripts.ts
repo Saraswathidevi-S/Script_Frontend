@@ -8,26 +8,26 @@ export interface ScriptItem {
 export const scriptData: ScriptItem[] = [
     {
         id: 3001,
-        procedureName: "PROC_FETCH_DATA",
-        scriptName: "fetch_data.sql",
+        procedureName: "Input_power",
+        scriptName: "Sum",
         createdBy: "Admin"
     },
     {
         id: 3002,
-        procedureName: "PROC_UPDATE_USER",
-        scriptName: "update_user.sql",
+        procedureName: "Procedure_test",
+        scriptName: "Maximum",
         createdBy: "John"
     },
     {
         id: 3003,
-        procedureName: "PROC_CLEANUP",
-        scriptName: "cleanup.sql",
-        createdBy: "Sarah"
+        procedureName: "Input_test_data",
+        scriptName: "minimum",
+        createdBy: "Sar"
     },
     {
         id: 3004,
-        procedureName: "PROC_EXPORT",
-        scriptName: "export.sql",
+        procedureName: "porocedure_demo",
+        scriptName: "Average",
         createdBy: "Admin"
     }
 ];
