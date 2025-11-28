@@ -7,11 +7,9 @@ interface ScriptFormProps {
 
 const CreateScriptForm: React.FC<ScriptFormProps> = ({ onClose }) => {
     const [scriptName, setScriptName] = useState("");
-    const [procedureName, setProcedureName] = useState("");
 
     const handleCancel = () => {
         setScriptName("");
-        setProcedureName("");
         onClose();
     };
 
@@ -60,18 +58,6 @@ const CreateScriptForm: React.FC<ScriptFormProps> = ({ onClose }) => {
                     value={scriptName}
                     onChange={(e) => setScriptName(e.target.value)}
                     sx={{ mb: 2 }}
-                />
-
-                <Typography fontSize="14px" fontWeight="500" mb={1}>
-                    Procedure Name
-                </Typography>
-                <TextField
-                    placeholder="Enter procedure name"
-                    fullWidth
-                    size="small"
-                    value={procedureName}
-                    onChange={(e) => setProcedureName(e.target.value)}
-                    sx={{ mb: 3 }}
                 />
 
                 <Box display="flex" justifyContent="flex-end" gap={2}>

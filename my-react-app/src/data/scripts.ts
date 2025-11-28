@@ -26,7 +26,7 @@ export const scriptData: ScriptItem[] = [
     },
     {
         id: 3004,
-        procedureName: "porocedure_demo",
+        procedureName: "procedure_demo",
         scriptName: "Average",
         createdBy: "Admin"
     }
